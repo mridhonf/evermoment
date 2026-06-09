@@ -14,14 +14,35 @@ function setMessage(selector, text, isError = false) {
   el.classList.toggle('error', isError);
 }
 
-function showLogin() {
-  qs('#login-view').hidden = false;
-  qs('#dashboard-view').hidden = true;
+function hideView(selector) {
+  const el = qs(selector);
+  if (!el) return;
+  el.hidden = true;
+  el.classList.add('is-hidden');
+  el.setAttribute('aria-hidden', 'true');
+  el.style.setProperty('display', 'none', 'important');
+}
+
+function showView(selector) {
+  const el = qs(selector);
+  if (!el) return;
+  el.hidden = false;
+  el.classList.remove('is-hidden');
+  el.removeAttribute('aria-hidden');
+  el.style.removeProperty('display');
+}
+
+function showLogin(message = '', isError = false) {
+  showView('#login-view');
+  hideView('#dashboard-view');
+  setMessage('#login-message', message, isError);
 }
 
 function showDashboard() {
-  qs('#login-view').hidden = true;
-  qs('#dashboard-view').hidden = false;
+  hideView('#login-view');
+  showView('#dashboard-view');
+  setMessage('#login-message', '');
+  window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
 function normalizeFeaturesInput(value) {
@@ -336,41 +357,94 @@ function bindTabs() {
   });
 }
 
+async function verifyOwnerAccess() {
+  if (!currentUser?.id) return false;
+
+  // Versi database project terbaru memakai table admin_users dengan kolom id = auth.users.id.
+  // Sebagian setup awal memakai app_admins dengan kolom user_id. Dua-duanya dicek agar aman.
+  const checks = [
+    { table: 'admin_users', column: 'id' },
+    { table: 'app_admins', column: 'user_id' }
+  ];
+
+  let lastError = null;
+
+  for (const check of checks) {
+    const { data, error } = await supabase
+      .from(check.table)
+      .select('*')
+      .eq(check.column, currentUser.id)
+      .maybeSingle();
+
+    if (!error && data) return true;
+    if (error) lastError = error;
+  }
+
+  // Kalau table admin memang belum dibuat, tampilkan pesan yang lebih jelas.
+  if (lastError && ['42P01', '42703'].includes(lastError.code)) {
+    throw new Error('Table admin owner belum cocok. Jalankan ulang SQL database project, lalu masukkan User UID owner ke table admin_users.');
+  }
+
+  return false;
+}
+
 async function login(event) {
   event.preventDefault();
 
   if (!isSupabaseConfigured) {
-    setMessage('#login-message', 'Supabase belum diatur. Isi .env.local atau Environment Variables di Vercel.', true);
+    showLogin('Supabase belum diatur. Isi .env.local atau Environment Variables di Vercel.', true);
     return;
   }
 
+  const form = event.currentTarget;
+  const submitButton = form.querySelector('button[type="submit"]');
+  submitButton.disabled = true;
+  submitButton.textContent = 'Memeriksa...';
   setMessage('#login-message', 'Memeriksa akun...');
 
-  const email = qs('#login-email').value.trim();
-  const password = qs('#login-password').value;
+  try {
+    const email = qs('#login-email').value.trim();
+    const password = qs('#login-password').value;
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) {
-    setMessage('#login-message', error.message, true);
-    return;
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+
+    currentUser = data.user;
+    await startDashboard();
+  } catch (error) {
+    showLogin(error.message || 'Login gagal. Cek email dan password.', true);
+  } finally {
+    submitButton.disabled = false;
+    submitButton.textContent = 'Login';
   }
-
-  currentUser = data.user;
-  await startDashboard();
 }
 
 async function logout() {
   await supabase.auth.signOut();
   currentUser = null;
-  showLogin();
+  qs('#login-form')?.reset();
+  showLogin('Kamu sudah logout.');
 }
 
 async function startDashboard() {
-  showDashboard();
+  setMessage('#login-message', 'Memeriksa akses owner...');
+
   try {
+    const isOwner = await verifyOwnerAccess();
+
+    if (!isOwner) {
+      await supabase.auth.signOut();
+      currentUser = null;
+      showLogin('Akun berhasil login, tapi belum didaftarkan sebagai owner. Copy User UID dari Supabase Auth, lalu masukkan ke table admin_users atau app_admins sesuai SQL yang kamu pakai.', true);
+      return;
+    }
+
+    showDashboard();
     await Promise.all([loadSettings(), loadPackages(), loadMediaLists()]);
   } catch (error) {
-    alert(error.message || 'Gagal memuat dashboard.');
+    await supabase.auth.signOut();
+    currentUser = null;
+    showLogin(error.message || 'Gagal memuat dashboard.', true);
   }
 }
 
@@ -383,22 +457,31 @@ async function init() {
   qs('#video-form')?.addEventListener('submit', saveVideo);
   bindTabs();
 
+  showLogin('Memeriksa sesi login...');
+
   if (!isSupabaseConfigured) {
-    showLogin();
-    setMessage('#login-message', 'Supabase belum disambungkan. Copy .env.example menjadi .env.local lalu isi URL dan anon key.', true);
+    showLogin('Supabase belum disambungkan. Copy .env.example menjadi .env.local lalu isi URL dan anon key.', true);
     return;
   }
 
-  const { data } = await supabase.auth.getSession();
+  const { data, error } = await supabase.auth.getSession();
+  if (error) {
+    showLogin(error.message, true);
+    return;
+  }
+
   if (data.session?.user) {
     currentUser = data.session.user;
     await startDashboard();
   } else {
-    showLogin();
+    showLogin('');
   }
 
-  supabase.auth.onAuthStateChange((_event, session) => {
+  supabase.auth.onAuthStateChange((event, session) => {
     currentUser = session?.user || null;
+    if (event === 'SIGNED_OUT') {
+      showLogin('');
+    }
   });
 }
 

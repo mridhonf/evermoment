@@ -35,6 +35,13 @@ body {
 
 body.modal-open { overflow: hidden; }
 
+/* Force hidden sections to truly disappear after deploy/build.
+   This prevents login and dashboard views from appearing together. */
+[hidden] {
+  display: none !important;
+}
+
+
 a { color: inherit; text-decoration: none; }
 
 button, input, textarea { font: inherit; }
@@ -960,4 +967,19 @@ input:focus, textarea:focus { border-color: rgba(201, 164, 92, 0.75); box-shadow
   .stats-strip article { padding-inline: 7px; }
   .video-card { grid-template-columns: 112px 1fr; }
   .admin-media-grid { grid-template-columns: 1fr; }
+}
+
+/* Dashboard auth state hard-fix for Vercel build */
+#login-view[hidden],
+#dashboard-view[hidden],
+.dashboard-login.is-hidden,
+.dashboard-app.is-hidden {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.btn:disabled {
+  opacity: 0.58;
+  cursor: not-allowed;
 }
