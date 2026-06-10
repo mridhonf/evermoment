@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#11110f" />
+    <meta name="description" content="Evermoment — portfolio photographer dan videographer untuk wedding, prewedding, commercial, dan dokumentasi event." />
+    <title>Evermoment — Photo Video Story</title>
+    <link rel="icon" href="/favicon.svg" id="favicon-link" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Fraunces:opsz,wght@9..144,500;9..144,650;9..144,750&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="mobile-header" id="home">
+        <nav class="topbar">
+          <a class="brand-lockup" href="#home" aria-label="Evermoment home">
+            <img src="/default-logo.svg" alt="Evermoment logo" class="brand-logo" id="site-logo" />
+            <span>
+              <strong id="brand-name">Evermoment</strong>
+              <em id="brand-tagline">Photo · Video · Story</em>
+            </span>
+          </a>
+          <a class="ghost-pill" href="dashboard.html" aria-label="Masuk dashboard owner">Owner</a>
+        </nav>
+
+        <section class="hero-section">
+          <p class="eyebrow">portfolio photographer & videographer</p>
+          <h1>Visual yang terasa hangat, rapi, dan punya cerita.</h1><br>
+          <div class="hero-address" aria-label="Alamat studio"><span class="line-icon small" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 21s6-5.33 6-11a6 6 0 1 0-12 0c0 5.67 6 11 6 11Z"/><circle cx="12" cy="10" r="2.5"/></svg></span><p>H2MR+QQ8, Jl. Kp. Kubang, Cipeucang, Kec. Cileungsi, Kabupaten Bogor, Jawa Barat 16820</p></div>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#packages">Lihat Paket</a>
+            <a class="btn btn-outline" href="#portfolio">Lihat Karya</a>
+          </div>
+        </section>
+
+        <section class="stats-strip" aria-label="Ringkasan layanan">
+          <article>
+            <strong>120+</strong>
+            <span>Project dokumentasi</span>
+          </article>
+          <article>
+            <strong>4.9/5</strong>
+            <span>Rating client</span>
+          </article>
+          <article>
+            <strong>24H</strong>
+            <span>Fast preview</span>
+          </article>
+        </section>
+      </header>
+
+      <main>
+        <section class="section-block" id="services">
+          <div class="section-divider"><span></span></div>
+          <div class="section-heading">
+            <p class="eyebrow">layanan</p>
+            <h2>Paket kreatif untuk momen personal dan brand.</h2>
+          </div>
+          <div class="service-list">
+            <article class="service-card">
+              <span class="line-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 8h3l1.7-2.2h6.6L17 8h3v10.5H4V8Z"/><circle cx="12" cy="13.4" r="3.2"/></svg>
+              </span>
+              <h3>Photography</h3>
+              <p>Foto editorial, candid, dokumentasi, dan portrait dengan tone visual yang bersih.</p>
+            </article>
+            <article class="service-card">
+              <span class="line-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 7.5h10.5v9H4v-9Z"/><path d="m14.5 10 5.5-3v11l-5.5-3"/></svg>
+              </span>
+              <h3>Videography</h3>
+              <p>Highlight video, cinematic reel, dan dokumentasi acara yang enak ditonton ulang.</p>
+            </article>
+            <article class="service-card">
+              <span class="line-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M5 5h14v14H5V5Z"/><path d="M8 9h8M8 12h6M8 15h4"/></svg>
+              </span>
+              <h3>Creative Direction</h3>
+              <p>Bantu konsep visual, shot list, moodboard, dan flow dokumentasi agar lebih siap.</p>
+            </article>
+          </div>
+        </section>
+
+        <section class="section-block" id="portfolio">
+          <div class="section-divider"><span></span></div>
+          <div class="section-heading with-action">
+            <div>
+              <p class="eyebrow">hasil foto</p>
+              <h2>Galeri pilihan dari beberapa project.</h2>
+            </div>
+          </div>
+          <div class="filter-wrap" id="photo-filters" aria-label="Filter kategori foto"></div>
+          <div class="photo-grid" id="photo-grid"></div>
+          <p class="empty-state" id="photo-empty" hidden>Belum ada foto aktif. Tambahkan melalui dashboard owner.</p>
+        </section>
+
+        <section class="section-block" id="videos">
+          <div class="section-divider"><span></span></div>
+          <div class="section-heading">
+            <p class="eyebrow">hasil video</p>
+            <h2>Preview video yang sudah diberi thumbnail rapi.</h2>
+          </div>
+          <div class="video-list" id="video-list"></div>
+          <p class="empty-state" id="video-empty" hidden>Belum ada video aktif. Tambahkan melalui dashboard owner.</p>
+        </section>
+
+        <section class="section-block" id="packages">
+          <div class="section-divider"><span></span></div>
+          <div class="section-heading">
+            <p class="eyebrow">pricelist</p>
+            <h2>Pilih kategori dulu, lalu lihat paket yang tersedia.</h2>
+          </div>
+          <div class="package-category-grid" id="package-categories"></div>
+          <div class="package-panel" id="package-panel" hidden>
+            <div class="package-panel-head">
+              <div>
+                <p class="eyebrow" id="package-panel-label">kategori paket</p>
+                <h3 id="package-panel-title">Pilih kategori paket</h3>
+              </div>
+              <button class="btn btn-outline package-close" type="button" id="package-close-button">Tutup</button>
+            </div>
+            <div class="package-list" id="package-list"></div>
+          </div>
+          <p class="empty-state" id="package-empty" hidden>Belum ada paket aktif. Tambahkan melalui dashboard owner.</p>
+        </section>
+
+        <section class="section-block" id="flow">
+          <div class="section-divider"><span></span></div>
+          <div class="section-heading">
+            <p class="eyebrow">alur booking</p>
+            <h2>Proses sederhana, komunikasi jelas.</h2>
+          </div>
+          <div class="flow-list">
+            <article>
+              <div class="flow-title"><span>01</span><strong>Konsultasi</strong></div>
+              <p>Ceritakan tanggal, lokasi, dan konsep visual yang diinginkan.</p>
+            </article>
+            <article>
+              <div class="flow-title"><span>02</span><strong>Pilih Paket</strong></div>
+              <p>Sesuaikan kebutuhan coverage, output, dan durasi pekerjaan.</p>
+            </article>
+            <article>
+              <div class="flow-title"><span>03</span><strong>Produksi</strong></div>
+              <p>Tim datang sesuai brief, lalu preview dan final file dikirim bertahap.</p>
+            </article>
+          </div>
+        </section>
+      </main>
+
+      <footer class="mobile-footer">
+        <h2>Siap bikin visual project kamu lebih rapi?</h2>
+        <p>Booking cepat via WhatsApp. Bisa diskusi konsep dulu sebelum menentukan paket.</p>
+        <a class="btn btn-primary full" href="#packages">Mulai dari Pricelist</a>
+      </footer>
+    </div>
+
+    <nav class="bottom-nav" aria-label="Navigasi utama">
+      <a href="#home" class="active">Home</a>
+      <a href="#portfolio">Foto</a>
+      <a href="#videos">Video</a>
+      <a href="#packages">Paket</a>
+    </nav>
+
+    <div class="modal" id="media-modal" aria-hidden="true" role="dialog" aria-label="Preview media">
+      <div class="modal-backdrop" data-close-modal></div>
+      <div class="modal-card">
+        <button class="modal-close" type="button" data-close-modal aria-label="Tutup preview">×</button>
+        <div class="modal-media" id="modal-media"></div>
+        <div class="modal-caption">
+          <strong id="modal-title">Preview</strong>
+          <span id="modal-meta"></span>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/js/app.js"></script>
+  </body>
+</html>
