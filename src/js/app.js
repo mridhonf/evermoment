@@ -73,7 +73,7 @@ const fallbackPackages = [
     price: 'Rp 750.000',
     description: 'Untuk kebutuhan sesi foto personal dan dokumentasi ringan.',
     features: ['1 fotografer', '2 jam sesi', '30 foto edit', 'Online gallery'],
-    category: 'Foto',
+    category: 'Photo',
     sort_order: 1
   },
   {
@@ -116,7 +116,7 @@ function setText(selector, value) {
 
 function normalizePackageCategory(category) {
   const value = String(category || '').trim().toLowerCase();
-  if (['foto', 'photo', 'photography'].includes(value)) return 'Foto';
+  if (['foto', 'photo', 'photography'].includes(value)) return 'Photo';
   if (['video', 'videography', 'videografi'].includes(value)) return 'Video';
   return 'Lainnya';
 }
@@ -262,26 +262,29 @@ function renderPackages() {
     return acc;
   }, {});
 
-  const order = ['Foto', 'Video', 'Lainnya'];
-  const categories = order.filter((name) => grouped[name]?.length);
+  const order = ['Photo', 'Video', 'Lainnya'];
+  const categories = order;
   const brand = state.settings.brand_name || fallbackSettings.brand_name;
 
   categoryGrid.innerHTML = categories.map((category) => {
-    const cards = (grouped[category] || []).map((pkg) => {
-      const message = encodeURIComponent(`Halo ${brand}, saya mau tanya paket ${pkg.name} (${pkg.price}). Bisa dibantu info detailnya?`);
-      return `
-        <article class="package-card">
-          <span class="package-kind">${category}</span>
-          <h3>${pkg.name || 'Paket'}</h3>
-          <div class="price">${pkg.price || '-'}</div>
-          <p>${pkg.description || 'Paket dokumentasi foto dan video.'}</p>
-          <ul>
-            ${normalizeFeatures(pkg.features).map((feature) => `<li>${feature}</li>`).join('')}
-          </ul>
-          <a class="btn btn-primary full" href="https://wa.me/${whatsapp}?text=${message}" target="_blank" rel="noopener">Book via WhatsApp</a>
-        </article>
-      `;
-    }).join('');
+    const categoryPackages = grouped[category] || [];
+    const cards = categoryPackages.length
+      ? categoryPackages.map((pkg) => {
+        const message = encodeURIComponent(`Halo ${brand}, saya mau tanya paket ${pkg.name} (${pkg.price}). Bisa dibantu info detailnya?`);
+        return `
+          <article class="package-card">
+            <span class="package-kind">${category}</span>
+            <h3>${pkg.name || 'Paket'}</h3>
+            <div class="price">${pkg.price || '-'}</div>
+            <p>${pkg.description || 'Paket dokumentasi foto dan video.'}</p>
+            <ul>
+              ${normalizeFeatures(pkg.features).map((feature) => `<li>${feature}</li>`).join('')}
+            </ul>
+            <a class="btn btn-primary full" href="https://wa.me/${whatsapp}?text=${message}" target="_blank" rel="noopener">Book via WhatsApp</a>
+          </article>
+        `;
+      }).join('')
+      : `<p class="empty-state package-empty-inline">Belum ada paket ${category.toLowerCase()}. Tambahkan dari dashboard owner.</p>`;
 
     return `
       <article class="package-accordion" data-package-accordion>
@@ -291,7 +294,7 @@ function renderPackages() {
             <span>Klik untuk melihat pricelist ${category.toLowerCase()}.</span>
           </span>
           <span class="package-accordion-side">
-            <span class="package-count">${grouped[category].length}</span>
+            <span class="package-count">${(grouped[category] || []).length}</span>
             <span class="package-chevron" aria-hidden="true"></span>
           </span>
         </button>

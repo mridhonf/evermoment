@@ -1070,7 +1070,7 @@ input:focus, textarea:focus { border-color: rgba(201, 164, 92, 0.75); box-shadow
 
   .video-thumb { height: 124px; }
 
-  .package-category-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .package-category-grid { grid-template-columns: 1fr; }
 
   .package-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1317,5 +1317,118 @@ input:focus, textarea:focus { border-color: rgba(201, 164, 92, 0.75); box-shadow
 
   .package-accordion-side {
     gap: 8px;
+  }
+}
+
+
+/* Dashboard package controls */
+.package-admin-head {
+  align-items: flex-start;
+}
+
+.package-add-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.admin-help {
+  max-width: 42rem;
+  margin-top: 8px;
+}
+
+.field-note {
+  display: block;
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.package-empty-inline {
+  margin: 0;
+}
+
+
+/* Owner package manager: separated Photo, Video, Lainnya sections */
+.package-owner-section {
+  overflow: hidden;
+}
+
+.package-manager-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.package-manager-card {
+  border: 1px solid rgba(201, 164, 92, 0.18);
+  border-radius: 26px;
+  padding: 20px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.72), rgba(243,238,227,0.82));
+  box-shadow: 0 16px 34px rgba(17, 17, 15, 0.06);
+}
+
+.package-manager-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.package-manager-head h3 {
+  margin: 4px 0 8px;
+  font-family: var(--font-serif);
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.package-create-form {
+  padding: 16px;
+  border-radius: 22px;
+  border: 1px solid rgba(17, 17, 15, 0.07);
+  background: rgba(251, 248, 241, 0.72);
+}
+
+.package-history {
+  margin-top: 18px;
+}
+
+.package-history-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.package-history-head strong {
+  font-size: 0.95rem;
+}
+
+.package-history-head span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.package-history-list {
+  display: grid;
+  gap: 12px;
+}
+
+.package-history-list .package-admin-card {
+  background: rgba(255,255,255,0.62);
+}
+
+@media (min-width: 980px) {
+  .package-manager-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .package-create-form,
+  .package-admin-card {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }

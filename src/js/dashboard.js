@@ -47,7 +47,7 @@ function showDashboard() {
 
 function normalizePackageCategory(category) {
   const value = String(category || '').trim().toLowerCase();
-  if (['foto', 'photo', 'photography'].includes(value)) return 'Foto';
+  if (['foto', 'photo', 'photography'].includes(value)) return 'Photo';
   if (['video', 'videography', 'videografi'].includes(value)) return 'Video';
   return 'Lainnya';
 }
@@ -58,6 +58,20 @@ function normalizeFeaturesInput(value) {
     .map((line) => line.trim())
     .filter(Boolean);
 }
+
+function escapeHtml(value = '') {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function escapeAttr(value = '') {
+  return escapeHtml(value);
+}
+
 
 function normalizeFileName(fileName) {
   return fileName
@@ -135,9 +149,28 @@ async function saveSettings(event) {
   }
 }
 
+const packageCategories = [
+  {
+    key: 'Photo',
+    title: 'Photo',
+    hint: 'Untuk paket foto seperti Basic, Signature, Premium, atau dokumentasi foto lain.'
+  },
+  {
+    key: 'Video',
+    title: 'Video',
+    hint: 'Untuk paket video seperti highlight, cinematic film, reels, atau dokumentasi video.'
+  },
+  {
+    key: 'Lainnya',
+    title: 'Lainnya',
+    hint: 'Untuk paket custom, bundle, event, add-on, atau kebutuhan khusus.'
+  }
+];
+
 async function loadPackages() {
-  const list = qs('#packages-admin-list');
-  list.innerHTML = '<p class="muted">Memuat paket...</p>';
+  const wrapper = qs('#package-manager-grid');
+  if (!wrapper) return;
+  wrapper.innerHTML = '<p class="muted">Memuat paket...</p>';
 
   const { data, error } = await supabase
     .from('packages')
@@ -145,56 +178,134 @@ async function loadPackages() {
     .order('sort_order', { ascending: true });
 
   if (error) {
-    list.innerHTML = `<p class="form-message error">${error.message}</p>`;
+    wrapper.innerHTML = `<p class="form-message error">${error.message}</p>`;
     return;
   }
 
-  if (!data?.length) {
-    list.innerHTML = '<p class="empty-state">Belum ada paket. Klik tombol tambah paket.</p>';
-    return;
-  }
+  const packages = data || [];
+  const grouped = packageCategories.reduce((acc, item) => {
+    acc[item.key] = packages.filter((pkg) => normalizePackageCategory(pkg.category) === item.key);
+    return acc;
+  }, {});
 
-  list.innerHTML = data.map((pkg) => `
-    <article class="package-admin-card" data-package-id="${pkg.id}">
-      <label>Nama paket <input type="text" data-field="name" value="${pkg.name || ''}" /></label>
-      <label>Harga <input type="text" data-field="price" value="${pkg.price || ''}" /></label>
+  wrapper.innerHTML = packageCategories.map((category) => renderPackageManager(category, grouped[category.key] || [])).join('');
+
+  wrapper.querySelectorAll('[data-package-form]').forEach((form) => form.addEventListener('submit', addPackageFromForm));
+  wrapper.querySelectorAll('[data-save-package]').forEach((button) => button.addEventListener('click', savePackage));
+  wrapper.querySelectorAll('[data-delete-package]').forEach((button) => button.addEventListener('click', deletePackage));
+}
+
+function renderPackageManager(category, items) {
+  const categoryKey = escapeAttr(category.key);
+  const list = items.length
+    ? items.map((pkg) => renderPackageHistoryCard(pkg, category.key)).join('')
+    : `<p class="empty-state">Belum ada paket ${escapeHtml(category.title)}. Isi form di atas untuk menambahkan paket baru.</p>`;
+
+  return `
+    <section class="package-manager-card" data-package-category="${categoryKey}">
+      <div class="package-manager-head">
+        <div>
+          <p class="eyebrow">kategori ${escapeHtml(category.title)}</p>
+          <h3>Paket ${escapeHtml(category.title)}</h3>
+          <p class="muted">${escapeHtml(category.hint)}</p>
+        </div>
+      </div>
+
+      <form class="admin-form package-create-form" data-package-form data-package-category="${categoryKey}">
+        <label>Nama paket
+          <input type="text" name="name" placeholder="Basic / Signature / Premium" required />
+        </label>
+        <label>Harga
+          <input type="text" name="price" placeholder="Rp 1.500.000" required />
+        </label>
+        <label>Urutan tampil
+          <input type="number" name="sort_order" value="1" />
+        </label>
+        <label class="checkbox-line"><input type="checkbox" name="is_active" checked /> Tampilkan di website</label>
+        <label class="wide-input">Deskripsi
+          <textarea name="description" placeholder="Tulis penjelasan singkat paket ini."></textarea>
+        </label>
+        <label class="wide-input">Fitur paket
+          <textarea name="features" placeholder="1 photographer&#10;2 jam dokumentasi&#10;50 foto edit"></textarea>
+        </label>
+        <button class="btn btn-primary full-row" type="submit">Tambah Paket ${escapeHtml(category.title)}</button>
+      </form>
+
+      <div class="package-history">
+        <div class="package-history-head">
+          <strong>Riwayat Paket ${escapeHtml(category.title)}</strong>
+          <span>${items.length} paket</span>
+        </div>
+        <div class="package-history-list">
+          ${list}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderPackageHistoryCard(pkg, category) {
+  const features = Array.isArray(pkg.features) ? pkg.features.join('\n') : '';
+  return `
+    <article class="package-admin-card" data-package-id="${escapeAttr(pkg.id)}" data-package-category="${escapeAttr(category)}">
+      <label>Nama paket <input type="text" data-field="name" value="${escapeAttr(pkg.name || '')}" /></label>
+      <label>Harga <input type="text" data-field="price" value="${escapeAttr(pkg.price || '')}" /></label>
       <label>Urutan <input type="number" data-field="sort_order" value="${pkg.sort_order ?? 0}" /></label>
-      <label class="checkbox-line"><input type="checkbox" data-field="is_active" ${pkg.is_active ? 'checked' : ''} /> Aktif</label>
-      <label class="wide-input">Deskripsi <textarea data-field="description">${pkg.description || ''}</textarea></label>
-      <label class="wide-input">Fitur paket <textarea data-field="features">${Array.isArray(pkg.features) ? pkg.features.join('\n') : ''}</textarea></label>
+      <label class="checkbox-line"><input type="checkbox" data-field="is_active" ${pkg.is_active ? 'checked' : ''} /> Aktif / tampil di website</label>
+      <label class="wide-input">Deskripsi <textarea data-field="description">${escapeHtml(pkg.description || '')}</textarea></label>
+      <label class="wide-input">Fitur paket <textarea data-field="features">${escapeHtml(features)}</textarea></label>
       <div class="row-actions wide-input">
-        <button class="btn btn-primary" type="button" data-save-package>Simpan Paket</button>
+        <button class="btn btn-primary" type="button" data-save-package>Simpan Perubahan</button>
         <button class="btn danger" type="button" data-delete-package>Hapus</button>
       </div>
     </article>
-  `).join('');
-
-  list.querySelectorAll('[data-save-package]').forEach((button) => button.addEventListener('click', savePackage));
-  list.querySelectorAll('[data-delete-package]').forEach((button) => button.addEventListener('click', deletePackage));
+  `;
 }
 
-async function addPackage() {
-  const { error } = await supabase.from('packages').insert({
-    name: 'Paket Baru',
-    category: 'Lainnya',
-    price: 'Rp 0',
-    description: 'Tulis deskripsi paket di sini.',
-    features: ['Fitur pertama', 'Fitur kedua'],
-    sort_order: 99,
-    is_active: true
-  });
+async function addPackageFromForm(event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const category = form.dataset.packageCategory || 'Lainnya';
+  const submitButton = form.querySelector('button[type="submit"]');
 
-  if (error) alert(error.message);
+  submitButton.disabled = true;
+  submitButton.textContent = 'Menyimpan...';
+
+  const payload = {
+    name: form.elements.name.value.trim(),
+    category,
+    price: form.elements.price.value.trim(),
+    description: form.elements.description.value.trim(),
+    features: normalizeFeaturesInput(form.elements.features.value),
+    sort_order: Number(form.elements.sort_order.value || 0),
+    is_active: form.elements.is_active.checked,
+    updated_at: new Date().toISOString()
+  };
+
+  const { error } = await supabase.from('packages').insert(payload);
+
+  submitButton.disabled = false;
+  submitButton.textContent = `Tambah Paket ${category}`;
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  form.reset();
+  form.elements.is_active.checked = true;
+  form.elements.sort_order.value = 1;
   await loadPackages();
 }
 
 async function savePackage(event) {
   const card = event.target.closest('[data-package-id]');
   const id = card.dataset.packageId;
+  const category = card.dataset.packageCategory || 'Lainnya';
 
   const payload = {
     name: card.querySelector('[data-field="name"]').value.trim(),
-    category: card.querySelector('[data-field="category"]').value.trim(),
+    category,
     price: card.querySelector('[data-field="price"]').value.trim(),
     description: card.querySelector('[data-field="description"]').value.trim(),
     features: normalizeFeaturesInput(card.querySelector('[data-field="features"]').value),
@@ -206,6 +317,7 @@ async function savePackage(event) {
   const { error } = await supabase.from('packages').update(payload).eq('id', id);
   if (error) alert(error.message);
   else alert('Paket berhasil disimpan.');
+  await loadPackages();
 }
 
 async function deletePackage(event) {
@@ -461,7 +573,6 @@ async function init() {
   qs('#login-form')?.addEventListener('submit', login);
   qs('#logout-button')?.addEventListener('click', logout);
   qs('#settings-form')?.addEventListener('submit', saveSettings);
-  qs('#add-package-button')?.addEventListener('click', addPackage);
   qs('#photo-form')?.addEventListener('submit', savePhoto);
   qs('#video-form')?.addEventListener('submit', saveVideo);
   bindTabs();
