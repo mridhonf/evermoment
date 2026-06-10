@@ -71,24 +71,27 @@ const fallbackPackages = [
     id: 'pkg1',
     name: 'Basic',
     price: 'Rp 750.000',
-    description: 'Untuk dokumentasi singkat dan kebutuhan personal.',
+    description: 'Untuk kebutuhan sesi foto personal dan dokumentasi ringan.',
     features: ['1 fotografer', '2 jam sesi', '30 foto edit', 'Online gallery'],
+    category: 'Foto',
     sort_order: 1
   },
   {
     id: 'pkg2',
     name: 'Signature',
     price: 'Rp 1.500.000',
-    description: 'Paket favorit untuk event dan prewedding simple.',
-    features: ['1 fotografer + 1 videografer', '4 jam coverage', '80 foto edit', 'Highlight video 1 menit'],
+    description: 'Paket khusus video untuk highlight acara dan momen utama.',
+    features: ['1 videografer', '4 jam coverage', 'Highlight video 1 menit', 'Color grading basic'],
+    category: 'Video',
     sort_order: 2
   },
   {
     id: 'pkg3',
     name: 'Premium',
     price: 'Rp 2.800.000',
-    description: 'Untuk dokumentasi lengkap dengan output foto dan video.',
+    description: 'Paket gabungan untuk kebutuhan dokumentasi lengkap.',
     features: ['Full day coverage', '150 foto edit', 'Cinematic video 3-5 menit', 'Thumbnail & preview cepat'],
+    category: 'Lainnya',
     sort_order: 3
   }
 ];
@@ -98,7 +101,8 @@ let state = {
   photos: fallbackPhotos,
   videos: fallbackVideos,
   packages: fallbackPackages,
-  activePhotoFilter: 'Semua'
+  activePhotoFilter: 'Semua',
+  activePackageCategory: null
 };
 
 const qs = (selector) => document.querySelector(selector);
@@ -107,6 +111,14 @@ const qsa = (selector) => [...document.querySelectorAll(selector)];
 function setText(selector, value) {
   const el = qs(selector);
   if (el) el.textContent = value;
+}
+
+
+function normalizePackageCategory(category) {
+  const value = String(category || '').trim().toLowerCase();
+  if (['foto', 'photo', 'photography'].includes(value)) return 'Foto';
+  if (['video', 'videography', 'videografi'].includes(value)) return 'Video';
+  return 'Lainnya';
 }
 
 function normalizeFeatures(features) {
@@ -234,18 +246,32 @@ function renderVideos() {
 }
 
 function renderPackages() {
+  const categoryGrid = qs('#package-categories');
+  const panel = qs('#package-panel');
   const list = qs('#package-list');
   const empty = qs('#package-empty');
-  if (!list) return;
+  if (!categoryGrid) return;
+
+  if (panel) panel.hidden = true;
+  if (list) list.innerHTML = '';
 
   const whatsapp = state.settings.whatsapp_number || fallbackSettings.whatsapp_number;
+  const grouped = state.packages.reduce((acc, pkg) => {
+    const key = normalizePackageCategory(pkg.category);
+    (acc[key] ||= []).push(pkg);
+    return acc;
+  }, {});
 
-  list.innerHTML = state.packages
-    .map((pkg) => {
-      const brand = state.settings.brand_name || fallbackSettings.brand_name;
+  const order = ['Foto', 'Video', 'Lainnya'];
+  const categories = order.filter((name) => grouped[name]?.length);
+  const brand = state.settings.brand_name || fallbackSettings.brand_name;
+
+  categoryGrid.innerHTML = categories.map((category) => {
+    const cards = (grouped[category] || []).map((pkg) => {
       const message = encodeURIComponent(`Halo ${brand}, saya mau tanya paket ${pkg.name} (${pkg.price}). Bisa dibantu info detailnya?`);
       return `
         <article class="package-card">
+          <span class="package-kind">${category}</span>
           <h3>${pkg.name || 'Paket'}</h3>
           <div class="price">${pkg.price || '-'}</div>
           <p>${pkg.description || 'Paket dokumentasi foto dan video.'}</p>
@@ -255,11 +281,46 @@ function renderPackages() {
           <a class="btn btn-primary full" href="https://wa.me/${whatsapp}?text=${message}" target="_blank" rel="noopener">Book via WhatsApp</a>
         </article>
       `;
-    })
-    .join('');
+    }).join('');
 
-  if (empty) empty.hidden = state.packages.length > 0;
+    return `
+      <article class="package-accordion" data-package-accordion>
+        <button class="package-category-card package-accordion-toggle" type="button" data-package-category="${category}" aria-expanded="false">
+          <span class="text">
+            <strong>Paket ${category}</strong>
+            <span>Klik untuk melihat pricelist ${category.toLowerCase()}.</span>
+          </span>
+          <span class="package-accordion-side">
+            <span class="package-count">${grouped[category].length}</span>
+            <span class="package-chevron" aria-hidden="true"></span>
+          </span>
+        </button>
+        <div class="package-accordion-body" hidden>
+          <div class="package-list">
+            ${cards}
+          </div>
+        </div>
+      </article>
+    `;
+  }).join('');
+
+  categoryGrid.querySelectorAll('[data-package-accordion]').forEach((accordion) => {
+    const button = accordion.querySelector('.package-accordion-toggle');
+    const body = accordion.querySelector('.package-accordion-body');
+    if (!button || !body) return;
+
+    button.addEventListener('click', () => {
+      const willOpen = body.hidden;
+      body.hidden = !willOpen;
+      button.classList.toggle('active', willOpen);
+      button.setAttribute('aria-expanded', String(willOpen));
+      accordion.classList.toggle('open', willOpen);
+    });
+  });
+
+  if (empty) empty.hidden = categories.length > 0;
 }
+
 
 function bindBottomNav() {
   const links = qsa('.bottom-nav a');

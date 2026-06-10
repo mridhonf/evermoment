@@ -26,6 +26,7 @@ create table if not exists public.site_settings (
 create table if not exists public.packages (
   id uuid primary key default gen_random_uuid(),
   name text not null,
+  category text default 'Lainnya',
   price text not null,
   description text,
   features text[] default '{}',

@@ -45,6 +45,13 @@ function showDashboard() {
   window.scrollTo({ top: 0, behavior: 'instant' });
 }
 
+function normalizePackageCategory(category) {
+  const value = String(category || '').trim().toLowerCase();
+  if (['foto', 'photo', 'photography'].includes(value)) return 'Foto';
+  if (['video', 'videography', 'videografi'].includes(value)) return 'Video';
+  return 'Lainnya';
+}
+
 function normalizeFeaturesInput(value) {
   return value
     .split('\n')
@@ -169,6 +176,7 @@ async function loadPackages() {
 async function addPackage() {
   const { error } = await supabase.from('packages').insert({
     name: 'Paket Baru',
+    category: 'Lainnya',
     price: 'Rp 0',
     description: 'Tulis deskripsi paket di sini.',
     features: ['Fitur pertama', 'Fitur kedua'],
@@ -186,6 +194,7 @@ async function savePackage(event) {
 
   const payload = {
     name: card.querySelector('[data-field="name"]').value.trim(),
+    category: card.querySelector('[data-field="category"]').value.trim(),
     price: card.querySelector('[data-field="price"]').value.trim(),
     description: card.querySelector('[data-field="description"]').value.trim(),
     features: normalizeFeaturesInput(card.querySelector('[data-field="features"]').value),

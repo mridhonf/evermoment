@@ -26,6 +26,7 @@ create table if not exists public.site_settings (
 create table if not exists public.packages (
   id uuid primary key default gen_random_uuid(),
   name text not null,
+  category text default 'Lainnya',
   price text not null,
   description text,
   features text[] default '{}',
@@ -95,7 +96,7 @@ insert into public.site_settings (brand_name, tagline, whatsapp_number, logo_url
 select 'Evermoment', 'Photo · Video · Story', '6281234567890', '/default-logo.svg', '/favicon.svg'
 where not exists (select 1 from public.site_settings);
 
-insert into public.packages (name, price, description, features, sort_order, is_active)
+insert into public.packages (name, category, price, description, features, sort_order, is_active)
 values
   (
     'Basic',
